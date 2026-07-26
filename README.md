@@ -1,4 +1,4 @@
-# NESA eTAMS Azure Infrastructure (D365 Landing Zone)
+#Azure Infrastructure (D365 Landing Zone)
 
 This repository contains the Infrastructure as Code (IaC) written in **Azure Bicep** and automated via **GitHub Actions** to deploy the multi-subscription landing zone for the ** modern application stack.
 
