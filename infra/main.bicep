@@ -41,41 +41,34 @@ module rgInternal './modules/resource-group.bicep' = {
   }
 }
 
-// 2. Route Tables & NSGs Module
-module nsgRtExt './modules/nsg-rt.bicep' = {
+
+// 2. Route Tables & NSGs Modules
+module nsgRtExt './modules/nsg-rt-ext.bicep' = {
   name: 'nsg-rt-ext-${env}'
-  scope: resourceGroup(externalRgName) // <--- FIX: Use parameter directly
+  scope: resourceGroup(externalRgName)
   params: {
     location: location
     env: env
     tags: mandatoryTagsExt
-    agwSubnetPrefix: agwSubnetCidr
-    defaultSubnetPrefix: dataIntSubnetCidr
   }
-  dependsOn: [
-    rgExternal // Guarantees Bicep creates the RG first!
-  ]
+  dependsOn: [ rgExternal ]
 }
 
-module nsgRtInt './modules/nsg-rt.bicep' = {
+module nsgRtInt './modules/nsg-rt-int.bicep' = {
   name: 'nsg-rt-int-${env}'
-  scope: resourceGroup(internalRgName) // <--- FIX: Use parameter directly
+  scope: resourceGroup(internalRgName)
   params: {
     location: location
     env: env
     tags: mandatoryTagsInt
-    agwSubnetPrefix: agwSubnetCidr
-    defaultSubnetPrefix: dataIntSubnetCidr
   }
-  dependsOn: [
-    rgInternal
-  ]
+  dependsOn: [ rgInternal ]
 }
 
-// 3. External (DMZ) VNet Module
+// 3. External VNet Module
 module vnetExternal './modules/network.bicep' = {
   name: 'vnet-ext-${env}'
-  scope: resourceGroup(externalRgName) // <--- FIX: Use parameter directly
+  scope: resourceGroup(externalRgName)
   params: {
     location: location
     vnetName: 'vnet-d365-${env}-ext-ae-001'
@@ -91,22 +84,24 @@ module vnetExternal './modules/network.bicep' = {
       {
         name: 'snet-msgq-${env}-ext-ae-001'
         prefix: msgqExtSubnetCidr
+        nsgId: nsgRtExt.outputs.nsgSbId
+        routeTableId: nsgRtExt.outputs.rtSbId
       }
       {
         name: 'snet-api-${env}-ext-ae-001'
         prefix: apiExtSubnetCidr
+        nsgId: nsgRtExt.outputs.nsgApiId
+        routeTableId: nsgRtExt.outputs.rtApiId
       }
     ]
   }
-  dependsOn: [
-    rgExternal
-  ]
+  dependsOn: [ rgExternal, nsgRtExt ] // <--- Ensures NSGs & RTs exist first
 }
 
 // 4. Internal VNet Module
 module vnetInternal './modules/network.bicep' = {
   name: 'vnet-int-${env}'
-  scope: resourceGroup(internalRgName) // <--- FIX: Use parameter directly
+  scope: resourceGroup(internalRgName)
   params: {
     location: location
     vnetName: 'vnet-d365-${env}-int-ae-001'
@@ -116,32 +111,40 @@ module vnetInternal './modules/network.bicep' = {
       {
         name: 'snet-data-${env}-int-ae-001'
         prefix: dataIntSubnetCidr
-        routeTableId: nsgRtInt.outputs.rtDefaultIntId
+        nsgId: nsgRtInt.outputs.nsgDataId
+        routeTableId: nsgRtInt.outputs.rtDataId
       }
       {
         name: 'snet-apim-${env}-int-ae-001'
         prefix: apimIntSubnetCidr
         nsgId: nsgRtInt.outputs.nsgApimId
+        routeTableId: nsgRtInt.outputs.rtApimId
       }
       {
         name: 'snet-sb-${env}-int-ae-001'
         prefix: sbIntSubnetCidr
+        nsgId: nsgRtInt.outputs.nsgSbId
+        routeTableId: nsgRtInt.outputs.rtSbId
       }
       {
         name: 'snet-api-${env}-int-ae-001'
         prefix: apiIntSubnetCidr
+        nsgId: nsgRtInt.outputs.nsgApiId
+        routeTableId: nsgRtInt.outputs.rtApiId
       }
       {
         name: 'snet-pe-${env}-int-ae-001'
         prefix: peIntSubnetCidr
+        nsgId: nsgRtInt.outputs.nsgPeId
+        routeTableId: nsgRtInt.outputs.rtPeId
       }
       {
         name: 'snet-mgmt-${env}-int-ae-001'
         prefix: mgmtIntSubnetCidr
+        nsgId: nsgRtInt.outputs.nsgMgmtId
+        routeTableId: nsgRtInt.outputs.rtMgmtId
       }
     ]
   }
-  dependsOn: [
-    rgInternal
-  ]
+  dependsOn: [ rgInternal, nsgRtInt ] // <--- Ensures NSGs & RTs exist first
 }

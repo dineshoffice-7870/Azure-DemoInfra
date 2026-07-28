@@ -1,0 +1,5 @@
+# Log in to Azure
+az login
+
+# Set the active subscription to Non-Prod
+az account set --subscription "deea32a9-3878-447f-b154-e1a277fd260e"

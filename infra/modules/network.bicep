@@ -3,8 +3,8 @@ targetScope = 'resourceGroup'
 param location string
 param vnetName string
 param addressPrefix string
-param subnets array
 param tags object
+param subnets array
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
   name: vnetName
@@ -20,8 +20,16 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
       name: subnet.name
       properties: {
         addressPrefix: subnet.prefix
-        networkSecurityGroup: contains(subnet, 'nsgId') ? { id: subnet.nsgId } : null
-        routeTable: contains(subnet, 'routeTableId') ? { id: subnet.routeTableId } : null
+        
+        // Map NSG if passed
+        networkSecurityGroup: contains(subnet, 'nsgId') && !empty(subnet.nsgId) ? {
+          id: subnet.nsgId
+        } : null
+        
+        // Map Route Table if passed
+        routeTable: contains(subnet, 'routeTableId') && !empty(subnet.routeTableId) ? {
+          id: subnet.routeTableId
+        } : null
       }
     }]
   }

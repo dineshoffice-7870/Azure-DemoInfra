@@ -1,0 +1,4 @@
+az deployment sub what-if \
+  --location australiaeast \
+  --template-file ./infra/main.bicep \
+  --parameters ./infra/main.dev.bicepparam

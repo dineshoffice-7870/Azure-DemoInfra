@@ -1,0 +1,5 @@
+az deployment sub create \
+  --name "dev-network-deployment-001" \
+  --location australiaeast \
+  --template-file ./infra/main.bicep \
+  --parameters ./infra/main.dev.bicepparam
